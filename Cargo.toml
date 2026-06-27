@@ -1,0 +1,29 @@
+[package]
+name = "qmc6309-driver"
+version = "0.1.0"
+edition = "2024"
+description = "A platform-agnostic, no-std Rust driver for the QMC6309 3-axis magnetic sensor"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/loongsoldier/qmc6309"
+readme = "README.md"
+keywords = ["magnetometer", "qmc6309", "embedded", "no-std", "i2c"]
+categories = ["embedded", "hardware-support", "no-std"]
+
+[dependencies]
+# 预生成代码，只需运行时，不需要 proc-macro
+device-driver = { version = "1.0", default-features = false }
+embedded-hal = "1.0"
+
+# 可选依赖
+embedded-hal-async = { version = "1.0", optional = true }
+embassy-time = { version = "0.5", optional = true }
+defmt = { version = "1.1", optional = true }
+
+[dev-dependencies]
+embedded-hal-mock = "0.11"
+
+[features]
+default = []
+async = ["dep:embedded-hal-async", "dep:embassy-time"]
+defmt = ["dep:defmt"]
+full = ["async", "defmt"]

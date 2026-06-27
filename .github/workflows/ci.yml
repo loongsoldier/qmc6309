@@ -1,0 +1,73 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  # ============ DSL → register.rs 一致性 ============
+  check-generated:
+    name: Check register.rs matches DSL
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install device-driver-cli
+        run: cargo install device-driver-cli --version 1.0.9
+      - name: Re-generate and diff
+        run: |
+          device-driver-cli -m qmc6309_reg.dsl -d Qmc6309Reg -o /tmp/register.rs
+          if ! diff -q src/register.rs /tmp/register.rs; then
+            echo "❌ src/register.rs does not match qmc6309_reg.dsl"
+            echo "Run: just generate"
+            diff src/register.rs /tmp/register.rs || true
+            exit 1
+          fi
+          echo "✅ Generated code matches DSL"
+
+  # ============ 编译（no-std 嵌入式目标） ============
+  build:
+    name: Build (${{ matrix.features }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        features: ["", "async", "full"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: thumbv7em-none-eabihf
+      - name: Build
+        run: |
+          if [ -z "${{ matrix.features }}" ]; then
+            cargo build --target thumbv7em-none-eabihf
+          else
+            cargo build --target thumbv7em-none-eabihf --features ${{ matrix.features }}
+          fi
+
+  # ============ 单元测试 ============
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Run tests
+        run: cargo test --all-features
+
+  # ============ Clippy ============
+  clippy:
+    name: Clippy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+          targets: thumbv7em-none-eabihf
+      - name: Clippy
+        run: cargo clippy --target thumbv7em-none-eabihf --all-features -- -D warnings
