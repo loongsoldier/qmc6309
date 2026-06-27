@@ -1104,10 +1104,10 @@ pub mod field_sets {
         pub const fn new_zero() -> Self {
             Self { bits: [0; 1] }
         }
-        ///Read the `lpf` field of the register.
+        ///Read the `osr_2` field of the register.
         ///
         ///  Low-pass filter depth (higher = lower noise, higher power)
-        pub fn lpf(&self) -> super::LpfDepth {
+        pub fn osr_2(&self) -> super::LpfDepth {
             let raw = unsafe {
                 ::device_driver::ops::load_lsb0::<
                     u8,
@@ -1116,10 +1116,10 @@ pub mod field_sets {
             };
             unsafe { raw.try_into().unwrap_unchecked() }
         }
-        ///Read the `osr` field of the register.
+        ///Read the `osr_1` field of the register.
         ///
         ///  Oversampling ratio
-        pub fn osr(&self) -> super::Oversampling {
+        pub fn osr_1(&self) -> super::Oversampling {
             let raw = unsafe {
                 ::device_driver::ops::load_lsb0::<
                     u8,
@@ -1140,10 +1140,10 @@ pub mod field_sets {
             };
             unsafe { raw.try_into().unwrap_unchecked() }
         }
-        ///Write the `lpf` field of the register.
+        ///Write the `osr_2` field of the register.
         ///
         ///  Low-pass filter depth (higher = lower noise, higher power)
-        pub fn set_lpf(&mut self, value: super::LpfDepth) {
+        pub fn set_osr_2(&mut self, value: super::LpfDepth) {
             let raw = value.into();
             unsafe {
                 ::device_driver::ops::store_lsb0::<
@@ -1152,10 +1152,10 @@ pub mod field_sets {
                 >(raw, 5, 8, &mut self.bits)
             };
         }
-        ///Write the `osr` field of the register.
+        ///Write the `osr_1` field of the register.
         ///
         ///  Oversampling ratio
-        pub fn set_osr(&mut self, value: super::Oversampling) {
+        pub fn set_osr_1(&mut self, value: super::Oversampling) {
             let raw = value.into();
             unsafe {
                 ::device_driver::ops::store_lsb0::<
@@ -1190,8 +1190,8 @@ pub mod field_sets {
     impl core::fmt::Debug for Reg1 {
         fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> Result<(), core::fmt::Error> {
             let mut d = f.debug_struct("Reg1");
-            d.field("lpf", &self.lpf());
-            d.field("osr", &self.osr());
+            d.field("osr_2", &self.osr_2());
+            d.field("osr_1", &self.osr_1());
             d.field("mode", &self.mode());
             d.finish()
         }
@@ -1200,8 +1200,8 @@ pub mod field_sets {
     impl defmt::Format for Reg1 {
         fn format(&self, f: defmt::Formatter) {
             defmt::write!(f, "Reg1 {{ ");
-            defmt::write!(f, "lpf: {}, ", & self.lpf());
-            defmt::write!(f, "osr: {}, ", & self.osr());
+            defmt::write!(f, "osr_2: {}, ", & self.osr_2());
+            defmt::write!(f, "osr_1: {}, ", & self.osr_1());
             defmt::write!(f, "mode: {}, ", & self.mode());
             defmt::write!(f, "}}");
         }
@@ -1296,10 +1296,10 @@ pub mod field_sets {
             };
             raw > 0
         }
-        ///Read the `rate` field of the register.
+        ///Read the `odr` field of the register.
         ///
         ///  Output data rate
-        pub fn rate(&self) -> super::DataRate {
+        pub fn odr(&self) -> super::DataRate {
             let raw = unsafe {
                 ::device_driver::ops::load_lsb0::<
                     u8,
@@ -1320,10 +1320,10 @@ pub mod field_sets {
             };
             unsafe { raw.try_into().unwrap_unchecked() }
         }
-        ///Read the `offset` field of the register.
+        ///Read the `set_reset_mode` field of the register.
         ///
         ///  Offset correction mode — controls whether set/reset is updated during measurement
-        pub fn offset(&self) -> super::OffsetCorrection {
+        pub fn set_reset_mode(&self) -> super::OffsetCorrection {
             let raw = unsafe {
                 ::device_driver::ops::load_lsb0::<
                     u8,
@@ -1344,10 +1344,10 @@ pub mod field_sets {
                 >(raw, 7, 8, &mut self.bits)
             };
         }
-        ///Write the `rate` field of the register.
+        ///Write the `odr` field of the register.
         ///
         ///  Output data rate
-        pub fn set_rate(&mut self, value: super::DataRate) {
+        pub fn set_odr(&mut self, value: super::DataRate) {
             let raw = value.into();
             unsafe {
                 ::device_driver::ops::store_lsb0::<
@@ -1368,10 +1368,10 @@ pub mod field_sets {
                 >(raw, 2, 4, &mut self.bits)
             };
         }
-        ///Write the `offset` field of the register.
+        ///Write the `set_reset_mode` field of the register.
         ///
         ///  Offset correction mode — controls whether set/reset is updated during measurement
-        pub fn set_offset(&mut self, value: super::OffsetCorrection) {
+        pub fn set_set_reset_mode(&mut self, value: super::OffsetCorrection) {
             let raw = value.into();
             unsafe {
                 ::device_driver::ops::store_lsb0::<
@@ -1395,9 +1395,9 @@ pub mod field_sets {
         fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> Result<(), core::fmt::Error> {
             let mut d = f.debug_struct("Reg2");
             d.field("soft_rst", &self.soft_rst());
-            d.field("rate", &self.rate());
+            d.field("odr", &self.odr());
             d.field("rng", &self.rng());
-            d.field("offset", &self.offset());
+            d.field("set_reset_mode", &self.set_reset_mode());
             d.finish()
         }
     }
@@ -1406,9 +1406,9 @@ pub mod field_sets {
         fn format(&self, f: defmt::Formatter) {
             defmt::write!(f, "Reg2 {{ ");
             defmt::write!(f, "soft_rst: {=bool}, ", & self.soft_rst());
-            defmt::write!(f, "rate: {}, ", & self.rate());
+            defmt::write!(f, "odr: {}, ", & self.odr());
             defmt::write!(f, "rng: {}, ", & self.rng());
-            defmt::write!(f, "offset: {}, ", & self.offset());
+            defmt::write!(f, "set_reset_mode: {}, ", & self.set_reset_mode());
             defmt::write!(f, "}}");
         }
     }

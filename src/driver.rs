@@ -173,7 +173,7 @@ const fn range_to_gauss(r: Range) -> f32 {
 /// Continuously updates at the configured data rate. `read_gauss()` reads the latest value at any time.
 pub struct Qmc6309<I, M: SensorMode = DefaultMode> {
     device: Qmc6309Reg<I>,
-    range: Range,
+    config: Config,
     _mode: PhantomData<M>,
 }
 
@@ -197,13 +197,27 @@ where
         }
         Ok(Self {
             device,
-            range: config.range,
+            config,
             _mode: PhantomData,
         })
     }
 
     pub fn chip_id(&mut self) -> Result<u8, Error<I::Error>> {
         Ok(self.device.chip_id().read()?.chip_id())
+    }
+
+    /// Return a copy of the current configuration
+    pub fn config(&self) -> Config {
+        self.config
+    }
+
+    /// Dynamic reconfiguration: soft-reset → apply new config to chip
+    pub fn set_config(&mut self, config: Config) -> Result<(), Error<I::Error>> {
+        soft_reset(&mut self.device)?;
+        wait_nvm_ready(&mut self.device)?;
+        write_config(&mut self.device, &config, Mode::Normal)?;
+        self.config = config;
+        Ok(())
     }
 
     /// Release the sensor, returning the underlying interface
@@ -213,7 +227,7 @@ where
 
     pub fn read_gauss(&mut self) -> Result<MagneticDataF32, Error<I::Error>> {
         let (x, y, z) = read_axes(&mut self.device)?;
-        let scale = range_to_gauss(self.range) / 32768.0;
+        let scale = range_to_gauss(self.config.range) / 32768.0;
         Ok(MagneticDataF32 {
             x: x as f32 * scale,
             y: y as f32 * scale,
@@ -252,7 +266,7 @@ where
         }
         Ok(Self {
             device,
-            range: config.range,
+            config,
             _mode: PhantomData,
         })
     }
@@ -263,6 +277,23 @@ where
         Ok(self.device.chip_id().read_async().await?.chip_id())
     }
 
+    /// Return a copy of the current configuration
+    pub fn config(&self) -> Config {
+        self.config
+    }
+
+    /// Dynamic reconfiguration: soft-reset → apply new config to chip
+    pub async fn set_config(
+        &mut self,
+        config: Config,
+    ) -> Result<(), Error<<I as device_driver::AsyncRegisterInterface>::Error>> {
+        soft_reset_async(&mut self.device).await?;
+        wait_nvm_ready_async(&mut self.device).await?;
+        write_config_async(&mut self.device, &config, Mode::Normal).await?;
+        self.config = config;
+        Ok(())
+    }
+
     pub fn release(self) -> I {
         self.device.interface
     }
@@ -271,7 +302,7 @@ where
         &mut self,
     ) -> Result<MagneticDataF32, Error<<I as device_driver::AsyncRegisterInterface>::Error>> {
         let (x, y, z) = read_axes_async(&mut self.device).await?;
-        let scale = range_to_gauss(self.range) / 32768.0;
+        let scale = range_to_gauss(self.config.range) / 32768.0;
         Ok(MagneticDataF32 {
             x: x as f32 * scale,
             y: y as f32 * scale,
@@ -321,6 +352,20 @@ where
         Ok(self.device.chip_id().read()?.chip_id())
     }
 
+    /// Return a copy of the current configuration
+    pub fn config(&self) -> ShotConfig {
+        self.config
+    }
+
+    /// Dynamic reconfiguration: soft-reset → apply new config to chip (Suspend mode, no measurement)
+    pub fn set_config(&mut self, config: ShotConfig) -> Result<(), Error<I::Error>> {
+        soft_reset(&mut self.device)?;
+        wait_nvm_ready(&mut self.device)?;
+        write_shot_config(&mut self.device, &config, Mode::Suspend)?;
+        self.config = config;
+        Ok(())
+    }
+
     pub fn release(self) -> I {
         self.device.interface
     }
@@ -330,7 +375,7 @@ where
     /// Internally: write Single mode → wait DRDY → read → convert to Gauss.
     /// Chip auto-returns to Suspend after completion.
     pub fn sample(&mut self) -> Result<MagneticDataF32, Error<I::Error>> {
-        write_shot_config(&mut self.device, &self.config)?;
+        write_shot_config(&mut self.device, &self.config, Mode::Single)?;
         while !self.device.status_1().read()?.drdy() {
             core::hint::spin_loop();
         }
@@ -382,6 +427,23 @@ where
         Ok(self.device.chip_id().read_async().await?.chip_id())
     }
 
+    /// Return a copy of the current configuration
+    pub fn config(&self) -> ShotConfig {
+        self.config
+    }
+
+    /// Dynamic reconfiguration: soft-reset → apply new config to chip (Suspend mode, no measurement)
+    pub async fn set_config(
+        &mut self,
+        config: ShotConfig,
+    ) -> Result<(), Error<<I as device_driver::AsyncRegisterInterface>::Error>> {
+        soft_reset_async(&mut self.device).await?;
+        wait_nvm_ready_async(&mut self.device).await?;
+        write_shot_config_async(&mut self.device, &config, Mode::Suspend).await?;
+        self.config = config;
+        Ok(())
+    }
+
     pub fn release(self) -> I {
         self.device.interface
     }
@@ -389,7 +451,7 @@ where
     pub async fn sample(
         &mut self,
     ) -> Result<MagneticDataF32, Error<<I as device_driver::AsyncRegisterInterface>::Error>> {
-        write_shot_config_async(&mut self.device, &self.config).await?;
+        write_shot_config_async(&mut self.device, &self.config, Mode::Single).await?;
         while !self.device.status_1().read_async().await?.drdy() {
             embassy_time::Timer::after_millis(1).await;
         }
@@ -412,6 +474,7 @@ where
 /// Used only for self-test. Use [`Qmc6309`] for continuous measurement.
 pub struct Qmc6309Diag<I, M: SensorMode = DefaultMode> {
     device: Qmc6309Reg<I>,
+    config: Config,
     _mode: PhantomData<M>,
 }
 
@@ -435,12 +498,27 @@ where
         }
         Ok(Self {
             device,
+            config,
             _mode: PhantomData,
         })
     }
 
     pub fn chip_id(&mut self) -> Result<u8, Error<I::Error>> {
         Ok(self.device.chip_id().read()?.chip_id())
+    }
+
+    /// Return a copy of the current configuration
+    pub fn config(&self) -> Config {
+        self.config
+    }
+
+    /// Dynamic reconfiguration: soft-reset → apply new config to chip
+    pub fn set_config(&mut self, config: Config) -> Result<(), Error<I::Error>> {
+        soft_reset(&mut self.device)?;
+        wait_nvm_ready(&mut self.device)?;
+        write_config(&mut self.device, &config, Mode::Continuous)?;
+        self.config = config;
+        Ok(())
     }
 
     pub fn release(self) -> I {
@@ -493,6 +571,7 @@ where
         }
         Ok(Self {
             device,
+            config,
             _mode: PhantomData,
         })
     }
@@ -501,6 +580,23 @@ where
         &mut self,
     ) -> Result<u8, Error<<I as device_driver::AsyncRegisterInterface>::Error>> {
         Ok(self.device.chip_id().read_async().await?.chip_id())
+    }
+
+    /// Return a copy of the current configuration
+    pub fn config(&self) -> Config {
+        self.config
+    }
+
+    /// Dynamic reconfiguration: soft-reset → apply new config to chip
+    pub async fn set_config(
+        &mut self,
+        config: Config,
+    ) -> Result<(), Error<<I as device_driver::AsyncRegisterInterface>::Error>> {
+        soft_reset_async(&mut self.device).await?;
+        wait_nvm_ready_async(&mut self.device).await?;
+        write_config_async(&mut self.device, &config, Mode::Continuous).await?;
+        self.config = config;
+        Ok(())
     }
 
     pub fn release(self) -> I {
@@ -634,13 +730,13 @@ fn write_config<I: RegisterInterface<AddressType = u8>>(
 ) -> Result<(), Error<I::Error>> {
     device.control().reg_1().modify(|r| {
         r.set_mode(mode);
-        r.set_lpf(cfg.lpf);
-        r.set_osr(cfg.osr);
+        r.set_osr_2(cfg.lpf);
+        r.set_osr_1(cfg.osr);
     })?;
     device.control().reg_2().modify(|r| {
-        r.set_rate(cfg.rate);
+        r.set_odr(cfg.rate);
         r.set_rng(cfg.range);
-        r.set_offset(cfg.offset);
+        r.set_set_reset_mode(cfg.offset);
     })?;
     Ok(())
 }
@@ -656,17 +752,17 @@ async fn write_config_async<I: device_driver::AsyncRegisterInterface<AddressType
         .reg_1()
         .modify_async(|r| {
             r.set_mode(mode);
-            r.set_lpf(cfg.lpf);
-            r.set_osr(cfg.osr);
+            r.set_osr_2(cfg.lpf);
+            r.set_osr_1(cfg.osr);
         })
         .await?;
     device
         .control()
         .reg_2()
         .modify_async(|r| {
-            r.set_rate(cfg.rate);
+            r.set_odr(cfg.rate);
             r.set_rng(cfg.range);
-            r.set_offset(cfg.offset);
+            r.set_set_reset_mode(cfg.offset);
         })
         .await?;
     Ok(())
@@ -675,15 +771,16 @@ async fn write_config_async<I: device_driver::AsyncRegisterInterface<AddressType
 fn write_shot_config<I: RegisterInterface<AddressType = u8>>(
     device: &mut Qmc6309Reg<I>,
     cfg: &ShotConfig,
+    mode: Mode,
 ) -> Result<(), Error<I::Error>> {
     device.control().reg_1().modify(|r| {
-        r.set_mode(Mode::Single);
-        r.set_lpf(cfg.lpf);
-        r.set_osr(cfg.osr);
+        r.set_mode(mode);
+        r.set_osr_2(cfg.lpf);
+        r.set_osr_1(cfg.osr);
     })?;
     device.control().reg_2().modify(|r| {
         r.set_rng(cfg.range);
-        r.set_offset(cfg.offset);
+        r.set_set_reset_mode(cfg.offset);
     })?;
     Ok(())
 }
@@ -692,14 +789,15 @@ fn write_shot_config<I: RegisterInterface<AddressType = u8>>(
 async fn write_shot_config_async<I: device_driver::AsyncRegisterInterface<AddressType = u8>>(
     device: &mut Qmc6309Reg<I>,
     cfg: &ShotConfig,
+    mode: Mode,
 ) -> Result<(), Error<I::Error>> {
     device
         .control()
         .reg_1()
         .modify_async(|r| {
-            r.set_mode(Mode::Single);
-            r.set_lpf(cfg.lpf);
-            r.set_osr(cfg.osr);
+            r.set_mode(mode);
+            r.set_osr_2(cfg.lpf);
+            r.set_osr_1(cfg.osr);
         })
         .await?;
     device
@@ -707,7 +805,7 @@ async fn write_shot_config_async<I: device_driver::AsyncRegisterInterface<Addres
         .reg_2()
         .modify_async(|r| {
             r.set_rng(cfg.range);
-            r.set_offset(cfg.offset);
+            r.set_set_reset_mode(cfg.offset);
         })
         .await?;
     Ok(())

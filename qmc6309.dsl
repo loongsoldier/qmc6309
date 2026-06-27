@@ -72,7 +72,7 @@ block Control {
         const SIZE_BITS = 8;
 
         /// Low-pass filter depth (higher = lower noise, higher power)
-        lpf: uint as enum LpfDepth {
+        osr2: uint as enum LpfDepth {
             D1 = 0,
             D2 = 1,
             D4 = 2,
@@ -82,7 +82,7 @@ block Control {
             _CatchAll = catch_all,
         } = 5..8,
         /// Oversampling ratio
-        osr: uint as enum Oversampling {
+        osr1: uint as enum Oversampling {
             /// 8× (lowest noise, highest power)
             X8 = 0,
             X4 = 1,
@@ -111,7 +111,7 @@ block Control {
         /// Soft reset (set to 1 to trigger, must manually write 0 to clear)
         soft_rst: bool = 7,
         /// Output data rate
-        rate: uint as enum DataRate {
+        odr: uint as enum DataRate {
             Hz1 = 0,
             Hz10 = 1,
             Hz50 = 2,
@@ -132,7 +132,7 @@ block Control {
             _CatchAll = catch_all,
         } = 2..4,
         /// Offset correction mode — controls whether set/reset is updated during measurement
-        offset: uint as enum OffsetCorrection {
+        set_reset_mode: uint as enum OffsetCorrection {
             /// Set and reset both on (offset updated each measurement)
             BothOn = 0,
             /// Set only on
