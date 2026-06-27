@@ -63,6 +63,8 @@ pub enum Error<BUS> {
     Bus(BUS),
     /// Chip ID mismatch (expected 0x90)
     InvalidChipId(u8),
+    /// Data overflow: any axis exceeded ±32000 LSB, data unreliable
+    Overflow,
 }
 
 #[cfg(feature = "defmt")]
@@ -71,6 +73,7 @@ impl<BUS: defmt::Format> defmt::Format for Error<BUS> {
         match self {
             Error::Bus(e) => defmt::write!(f, "Bus({})", e),
             Error::InvalidChipId(id) => defmt::write!(f, "InvalidChipId({})", id),
+            Error::Overflow => defmt::write!(f, "Overflow"),
         }
     }
 }
@@ -184,6 +187,9 @@ where
         if let Err(e) = soft_reset(&mut device) {
             return Err((e, device.interface));
         }
+        if let Err(e) = wait_nvm_ready(&mut device) {
+            return Err((e, device.interface));
+        }
         if let Err(e) = verify_device(&mut device) {
             return Err((e, device.interface));
         }
@@ -234,6 +240,9 @@ where
     > {
         let mut device = Qmc6309Reg::new(interface);
         if let Err(e) = soft_reset_async(&mut device).await {
+            return Err((e, device.interface));
+        }
+        if let Err(e) = wait_nvm_ready_async(&mut device).await {
             return Err((e, device.interface));
         }
         if let Err(e) = verify_device_async(&mut device).await {
@@ -295,6 +304,9 @@ where
         if let Err(e) = soft_reset(&mut device) {
             return Err((e, device.interface));
         }
+        if let Err(e) = wait_nvm_ready(&mut device) {
+            return Err((e, device.interface));
+        }
         if let Err(e) = verify_device(&mut device) {
             return Err((e, device.interface));
         }
@@ -350,6 +362,9 @@ where
     > {
         let mut device = Qmc6309Reg::new(interface);
         if let Err(e) = soft_reset_async(&mut device).await {
+            return Err((e, device.interface));
+        }
+        if let Err(e) = wait_nvm_ready_async(&mut device).await {
             return Err((e, device.interface));
         }
         if let Err(e) = verify_device_async(&mut device).await {
@@ -410,6 +425,9 @@ where
         if let Err(e) = soft_reset(&mut device) {
             return Err((e, device.interface));
         }
+        if let Err(e) = wait_nvm_ready(&mut device) {
+            return Err((e, device.interface));
+        }
         if let Err(e) = verify_device(&mut device) {
             return Err((e, device.interface));
         }
@@ -465,6 +483,9 @@ where
         if let Err(e) = soft_reset_async(&mut device).await {
             return Err((e, device.interface));
         }
+        if let Err(e) = wait_nvm_ready_async(&mut device).await {
+            return Err((e, device.interface));
+        }
         if let Err(e) = verify_device_async(&mut device).await {
             return Err((e, device.interface));
         }
@@ -510,6 +531,11 @@ where
 fn read_axes<I: RegisterInterface<AddressType = u8>>(
     device: &mut Qmc6309Reg<I>,
 ) -> Result<(i16, i16, i16), Error<I::Error>> {
+    // Read status first: chip auto-clears ovfl/drdy on this read
+    let status = device.status_1().read()?;
+    if status.ovfl() {
+        return Err(Error::Overflow);
+    }
     let x = device.data().data_x().read()?.value();
     let y = device.data().data_y().read()?.value();
     let z = device.data().data_z().read()?.value();
@@ -520,6 +546,11 @@ fn read_axes<I: RegisterInterface<AddressType = u8>>(
 async fn read_axes_async<I: device_driver::AsyncRegisterInterface<AddressType = u8>>(
     device: &mut Qmc6309Reg<I>,
 ) -> Result<(i16, i16, i16), Error<I::Error>> {
+    // Read status first: chip auto-clears ovfl/drdy on this read
+    let status = device.status_1().read_async().await?;
+    if status.ovfl() {
+        return Err(Error::Overflow);
+    }
     let x = device.data().data_x().read_async().await?.value();
     let y = device.data().data_y().read_async().await?.value();
     let z = device.data().data_z().read_async().await?.value();
@@ -549,6 +580,31 @@ async fn soft_reset_async<I: device_driver::AsyncRegisterInterface<AddressType =
         .write_async(|r| r.set_soft_rst(false))
         .await?;
     Ok(())
+}
+
+fn wait_nvm_ready<I: RegisterInterface<AddressType = u8>>(
+    device: &mut Qmc6309Reg<I>,
+) -> Result<(), Error<I::Error>> {
+    loop {
+        let status = device.status_1().read()?;
+        if status.nvm_load_done() && status.nvm_rdy() {
+            return Ok(());
+        }
+        core::hint::spin_loop();
+    }
+}
+
+#[cfg(feature = "async")]
+async fn wait_nvm_ready_async<I: device_driver::AsyncRegisterInterface<AddressType = u8>>(
+    device: &mut Qmc6309Reg<I>,
+) -> Result<(), Error<I::Error>> {
+    loop {
+        let status = device.status_1().read_async().await?;
+        if status.nvm_load_done() && status.nvm_rdy() {
+            return Ok(());
+        }
+        embassy_time::Timer::after_millis(1).await;
+    }
 }
 
 fn verify_device<I: RegisterInterface<AddressType = u8>>(

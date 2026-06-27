@@ -5,7 +5,7 @@ default:
 
 # Re-generate register code from DSL
 generate:
-    device-driver-cli -m qmc6309_reg.dsl -d Qmc6309Reg -o src/register.rs
+    device-driver-cli -m qmc6309.dsl -d Qmc6309Reg -o src/register.rs
 
 # Build all feature combinations
 build:

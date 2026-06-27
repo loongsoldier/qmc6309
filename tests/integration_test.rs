@@ -11,6 +11,8 @@ fn mock_new_transactions() -> Vec<Transaction> {
         // soft_reset
         Transaction::write(ADDR, vec![0x0B, 0x80]),
         Transaction::write(ADDR, vec![0x0B, 0x00]),
+        // wait_nvm_ready: read Status1 (0x09) → 0x18 (nvm_load_done=1, nvm_rdy=1)
+        Transaction::write_read(ADDR, vec![0x09], vec![0x18]),
         // verify_device
         Transaction::write_read(ADDR, vec![0x00], vec![0x90]),
         // write_config Reg1 (modify: read 0x0A → write)
@@ -44,6 +46,9 @@ fn test_bad_chip_id_is_error_and_returns_interface() {
     let transactions = vec![
         Transaction::write(ADDR, vec![0x0B, 0x80]),
         Transaction::write(ADDR, vec![0x0B, 0x00]),
+        // wait_nvm_ready: Status1 (0x09) → 0x18 (nvm ready)
+        Transaction::write_read(ADDR, vec![0x09], vec![0x18]),
+        // verify_device: chip_id (0x00) → 0x33 (wrong!)
         Transaction::write_read(ADDR, vec![0x00], vec![0x33]),
     ];
     let mock = MockI2c::new(&transactions);
@@ -62,6 +67,8 @@ fn test_bad_chip_id_is_error_and_returns_interface() {
 #[test]
 fn test_read_gauss() {
     let mut transactions = mock_new_transactions();
+    // read_axes: first reads Status1 (0x09) to check ovfl → 0x00 (no overflow)
+    transactions.push(Transaction::write_read(ADDR, vec![0x09], vec![0x00]));
     // X @ 0x01: 0x1234 LE → i16 = 4660
     transactions.push(Transaction::write_read(ADDR, vec![0x01], vec![0x34, 0x12]));
     // Y @ 0x03: 0x0000

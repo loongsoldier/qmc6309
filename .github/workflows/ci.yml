@@ -20,9 +20,9 @@ jobs:
         run: cargo install device-driver-cli --version 1.0.9
       - name: Re-generate and diff
         run: |
-          device-driver-cli -m qmc6309_reg.dsl -d Qmc6309Reg -o /tmp/register.rs
+          device-driver-cli -m qmc6309.dsl -d Qmc6309Reg -o /tmp/register.rs
           if ! diff -q src/register.rs /tmp/register.rs; then
-            echo "❌ src/register.rs does not match qmc6309_reg.dsl"
+            echo "❌ src/register.rs does not match qmc6309.dsl"
             echo "Run: just generate"
             diff src/register.rs /tmp/register.rs || true
             exit 1
