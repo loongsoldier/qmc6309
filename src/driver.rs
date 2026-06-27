@@ -86,7 +86,6 @@ impl<BUS> From<BUS> for Error<BUS> {
 
 // ==================== Configuration ====================
 
-/// 持续测量Configuration（Normal / Continuous 模式共用）
 /// Continuous measurement config (shared by Normal / Continuous modes)
 ///
 /// `Config::default()` for recommended values: 200 Hz, ±8 G, max oversampling, set/reset both on.
