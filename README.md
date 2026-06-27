@@ -1,7 +1,7 @@
 # QMC6309 Driver
 
-[![crates.io](https://img.shields.io/crates/v/qmc6309-driver.svg)](https://crates.io/crates/qmc6309-driver)
-[![docs.rs](https://docs.rs/qmc6309-driver/badge.svg)](https://docs.rs/qmc6309-driver)
+[![crates.io](https://img.shields.io/crates/v/qmc6309.svg)](https://crates.io/crates/qmc6309)
+[![docs.rs](https://docs.rs/qmc6309/badge.svg)](https://docs.rs/qmc6309)
 
 A platform-agnostic, `#![no_std]` Rust driver for the QMC6309 3-axis magnetic sensor over I²C.
 
