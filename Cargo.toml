@@ -1,6 +1,6 @@
 [package]
 name = "qmc6309"
-version = "0.2.0"
+version = "0.3.0"
 edition = "2024"
 description = "A platform-agnostic, no-std Rust driver for the QMC6309 3-axis magnetic sensor"
 license = "MIT OR Apache-2.0"

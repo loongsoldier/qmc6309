@@ -1104,10 +1104,10 @@ pub mod field_sets {
         pub const fn new_zero() -> Self {
             Self { bits: [0; 1] }
         }
-        ///Read the `osr_2` field of the register.
+        ///Read the `lpf` field of the register.
         ///
         ///  Low-pass filter depth (higher = lower noise, higher power)
-        pub fn osr_2(&self) -> super::Osr2 {
+        pub fn lpf(&self) -> super::LpfDepth {
             let raw = unsafe {
                 ::device_driver::ops::load_lsb0::<
                     u8,
@@ -1116,10 +1116,10 @@ pub mod field_sets {
             };
             unsafe { raw.try_into().unwrap_unchecked() }
         }
-        ///Read the `osr_1` field of the register.
+        ///Read the `osr` field of the register.
         ///
         ///  Oversampling ratio
-        pub fn osr_1(&self) -> super::Osr1 {
+        pub fn osr(&self) -> super::Oversampling {
             let raw = unsafe {
                 ::device_driver::ops::load_lsb0::<
                     u8,
@@ -1140,10 +1140,10 @@ pub mod field_sets {
             };
             unsafe { raw.try_into().unwrap_unchecked() }
         }
-        ///Write the `osr_2` field of the register.
+        ///Write the `lpf` field of the register.
         ///
         ///  Low-pass filter depth (higher = lower noise, higher power)
-        pub fn set_osr_2(&mut self, value: super::Osr2) {
+        pub fn set_lpf(&mut self, value: super::LpfDepth) {
             let raw = value.into();
             unsafe {
                 ::device_driver::ops::store_lsb0::<
@@ -1152,10 +1152,10 @@ pub mod field_sets {
                 >(raw, 5, 8, &mut self.bits)
             };
         }
-        ///Write the `osr_1` field of the register.
+        ///Write the `osr` field of the register.
         ///
         ///  Oversampling ratio
-        pub fn set_osr_1(&mut self, value: super::Osr1) {
+        pub fn set_osr(&mut self, value: super::Oversampling) {
             let raw = value.into();
             unsafe {
                 ::device_driver::ops::store_lsb0::<
@@ -1190,8 +1190,8 @@ pub mod field_sets {
     impl core::fmt::Debug for Reg1 {
         fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> Result<(), core::fmt::Error> {
             let mut d = f.debug_struct("Reg1");
-            d.field("osr_2", &self.osr_2());
-            d.field("osr_1", &self.osr_1());
+            d.field("lpf", &self.lpf());
+            d.field("osr", &self.osr());
             d.field("mode", &self.mode());
             d.finish()
         }
@@ -1200,8 +1200,8 @@ pub mod field_sets {
     impl defmt::Format for Reg1 {
         fn format(&self, f: defmt::Formatter) {
             defmt::write!(f, "Reg1 {{ ");
-            defmt::write!(f, "osr_2: {}, ", & self.osr_2());
-            defmt::write!(f, "osr_1: {}, ", & self.osr_1());
+            defmt::write!(f, "lpf: {}, ", & self.lpf());
+            defmt::write!(f, "osr: {}, ", & self.osr());
             defmt::write!(f, "mode: {}, ", & self.mode());
             defmt::write!(f, "}}");
         }
@@ -1296,10 +1296,10 @@ pub mod field_sets {
             };
             raw > 0
         }
-        ///Read the `odr` field of the register.
+        ///Read the `rate` field of the register.
         ///
         ///  Output data rate
-        pub fn odr(&self) -> super::Odr {
+        pub fn rate(&self) -> super::DataRate {
             let raw = unsafe {
                 ::device_driver::ops::load_lsb0::<
                     u8,
@@ -1320,10 +1320,10 @@ pub mod field_sets {
             };
             unsafe { raw.try_into().unwrap_unchecked() }
         }
-        ///Read the `set_reset_mode` field of the register.
+        ///Read the `offset` field of the register.
         ///
-        ///  Set/reset mode — controls whether offset is updated during measurement
-        pub fn set_reset_mode(&self) -> super::SetResetMode {
+        ///  Offset correction mode — controls whether set/reset is updated during measurement
+        pub fn offset(&self) -> super::OffsetCorrection {
             let raw = unsafe {
                 ::device_driver::ops::load_lsb0::<
                     u8,
@@ -1344,10 +1344,10 @@ pub mod field_sets {
                 >(raw, 7, 8, &mut self.bits)
             };
         }
-        ///Write the `odr` field of the register.
+        ///Write the `rate` field of the register.
         ///
         ///  Output data rate
-        pub fn set_odr(&mut self, value: super::Odr) {
+        pub fn set_rate(&mut self, value: super::DataRate) {
             let raw = value.into();
             unsafe {
                 ::device_driver::ops::store_lsb0::<
@@ -1368,10 +1368,10 @@ pub mod field_sets {
                 >(raw, 2, 4, &mut self.bits)
             };
         }
-        ///Write the `set_reset_mode` field of the register.
+        ///Write the `offset` field of the register.
         ///
-        ///  Set/reset mode — controls whether offset is updated during measurement
-        pub fn set_set_reset_mode(&mut self, value: super::SetResetMode) {
+        ///  Offset correction mode — controls whether set/reset is updated during measurement
+        pub fn set_offset(&mut self, value: super::OffsetCorrection) {
             let raw = value.into();
             unsafe {
                 ::device_driver::ops::store_lsb0::<
@@ -1395,9 +1395,9 @@ pub mod field_sets {
         fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> Result<(), core::fmt::Error> {
             let mut d = f.debug_struct("Reg2");
             d.field("soft_rst", &self.soft_rst());
-            d.field("odr", &self.odr());
+            d.field("rate", &self.rate());
             d.field("rng", &self.rng());
-            d.field("set_reset_mode", &self.set_reset_mode());
+            d.field("offset", &self.offset());
             d.finish()
         }
     }
@@ -1406,9 +1406,9 @@ pub mod field_sets {
         fn format(&self, f: defmt::Formatter) {
             defmt::write!(f, "Reg2 {{ ");
             defmt::write!(f, "soft_rst: {=bool}, ", & self.soft_rst());
-            defmt::write!(f, "odr: {}, ", & self.odr());
+            defmt::write!(f, "rate: {}, ", & self.rate());
             defmt::write!(f, "rng: {}, ", & self.rng());
-            defmt::write!(f, "set_reset_mode: {}, ", & self.set_reset_mode());
+            defmt::write!(f, "offset: {}, ", & self.offset());
             defmt::write!(f, "}}");
         }
     }
@@ -1810,36 +1810,36 @@ pub mod field_sets {
 #[repr(u8)]
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
-pub enum Osr2 {
-    Depth1 = 0,
-    Depth2 = 1,
-    Depth4 = 2,
-    Depth8 = 3,
-    Depth16 = 4,
-    ///  Reserved values (5~7), hardware equivalent to Depth16
+pub enum LpfDepth {
+    D1 = 0,
+    D2 = 1,
+    D4 = 2,
+    D8 = 3,
+    D16 = 4,
+    ///  Reserved values (5~7), hardware equivalent to D16
     CatchAll(u8) = 5,
 }
-impl From<u8> for Osr2 {
+impl From<u8> for LpfDepth {
     fn from(val: u8) -> Self {
         match val {
-            0 => Self::Depth1,
-            1 => Self::Depth2,
-            2 => Self::Depth4,
-            3 => Self::Depth8,
-            4 => Self::Depth16,
+            0 => Self::D1,
+            1 => Self::D2,
+            2 => Self::D4,
+            3 => Self::D8,
+            4 => Self::D16,
             val => Self::CatchAll(val),
         }
     }
 }
-impl From<Osr2> for u8 {
-    fn from(val: Osr2) -> Self {
+impl From<LpfDepth> for u8 {
+    fn from(val: LpfDepth) -> Self {
         match val {
-            Osr2::Depth1 => 0,
-            Osr2::Depth2 => 1,
-            Osr2::Depth4 => 2,
-            Osr2::Depth8 => 3,
-            Osr2::Depth16 => 4,
-            Osr2::CatchAll(num) => num,
+            LpfDepth::D1 => 0,
+            LpfDepth::D2 => 1,
+            LpfDepth::D4 => 2,
+            LpfDepth::D8 => 3,
+            LpfDepth::D16 => 4,
+            LpfDepth::CatchAll(num) => num,
         }
     }
 }
@@ -1847,38 +1847,38 @@ impl From<Osr2> for u8 {
 #[repr(u8)]
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
-pub enum Osr1 {
-    ///  Ratio 8 (lowest noise, highest power)
-    Ratio8 = 0,
-    Ratio4 = 1,
-    Ratio2 = 2,
-    ///  Ratio 1 (highest noise, lowest power)
-    Ratio1 = 3,
+pub enum Oversampling {
+    ///  8× (lowest noise, highest power)
+    X8 = 0,
+    X4 = 1,
+    X2 = 2,
+    ///  1× (highest noise, lowest power)
+    X1 = 3,
 }
-impl core::convert::TryFrom<u8> for Osr1 {
+impl core::convert::TryFrom<u8> for Oversampling {
     type Error = ::device_driver::ConversionError<u8>;
     fn try_from(val: u8) -> Result<Self, Self::Error> {
         match val {
-            0 => Ok(Self::Ratio8),
-            1 => Ok(Self::Ratio4),
-            2 => Ok(Self::Ratio2),
-            3 => Ok(Self::Ratio1),
+            0 => Ok(Self::X8),
+            1 => Ok(Self::X4),
+            2 => Ok(Self::X2),
+            3 => Ok(Self::X1),
             val => {
                 Err(::device_driver::ConversionError {
                     source: val,
-                    target: "Osr1",
+                    target: "Oversampling",
                 })
             }
         }
     }
 }
-impl From<Osr1> for u8 {
-    fn from(val: Osr1) -> Self {
+impl From<Oversampling> for u8 {
+    fn from(val: Oversampling) -> Self {
         match val {
-            Osr1::Ratio8 => 0,
-            Osr1::Ratio4 => 1,
-            Osr1::Ratio2 => 2,
-            Osr1::Ratio1 => 3,
+            Oversampling::X8 => 0,
+            Oversampling::X4 => 1,
+            Oversampling::X2 => 2,
+            Oversampling::X1 => 3,
         }
     }
 }
@@ -1927,7 +1927,7 @@ impl From<Mode> for u8 {
 #[repr(u8)]
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
-pub enum Odr {
+pub enum DataRate {
     Hz1 = 0,
     Hz10 = 1,
     Hz50 = 2,
@@ -1936,7 +1936,7 @@ pub enum Odr {
     ///  Reserved values (5~7), hardware equivalent to 200 Hz
     CatchAll(u8) = 5,
 }
-impl From<u8> for Odr {
+impl From<u8> for DataRate {
     fn from(val: u8) -> Self {
         match val {
             0 => Self::Hz1,
@@ -1948,15 +1948,15 @@ impl From<u8> for Odr {
         }
     }
 }
-impl From<Odr> for u8 {
-    fn from(val: Odr) -> Self {
+impl From<DataRate> for u8 {
+    fn from(val: DataRate) -> Self {
         match val {
-            Odr::Hz1 => 0,
-            Odr::Hz10 => 1,
-            Odr::Hz50 => 2,
-            Odr::Hz100 => 3,
-            Odr::Hz200 => 4,
-            Odr::CatchAll(num) => num,
+            DataRate::Hz1 => 0,
+            DataRate::Hz10 => 1,
+            DataRate::Hz50 => 2,
+            DataRate::Hz100 => 3,
+            DataRate::Hz200 => 4,
+            DataRate::CatchAll(num) => num,
         }
     }
 }
@@ -1994,37 +1994,37 @@ impl From<Range> for u8 {
         }
     }
 }
-///  Set/reset mode — controls whether offset is updated during measurement
+///  Offset correction mode — controls whether set/reset is updated during measurement
 #[repr(u8)]
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
-pub enum SetResetMode {
+pub enum OffsetCorrection {
     ///  Set and reset both on (offset updated each measurement)
-    SetAndResetOn = 0,
+    BothOn = 0,
     ///  Set only on
-    SetOnlyOn = 1,
+    SetOnly = 1,
     ///  Reserved
     CatchAll(u8) = 2,
-    ///  Set and reset both off (no offset update)
+    ///  Both off (no offset update)
     Off = 3,
 }
-impl From<u8> for SetResetMode {
+impl From<u8> for OffsetCorrection {
     fn from(val: u8) -> Self {
         match val {
-            0 => Self::SetAndResetOn,
-            1 => Self::SetOnlyOn,
+            0 => Self::BothOn,
+            1 => Self::SetOnly,
             3 => Self::Off,
             val => Self::CatchAll(val),
         }
     }
 }
-impl From<SetResetMode> for u8 {
-    fn from(val: SetResetMode) -> Self {
+impl From<OffsetCorrection> for u8 {
+    fn from(val: OffsetCorrection) -> Self {
         match val {
-            SetResetMode::SetAndResetOn => 0,
-            SetResetMode::SetOnlyOn => 1,
-            SetResetMode::CatchAll(num) => num,
-            SetResetMode::Off => 3,
+            OffsetCorrection::BothOn => 0,
+            OffsetCorrection::SetOnly => 1,
+            OffsetCorrection::CatchAll(num) => num,
+            OffsetCorrection::Off => 3,
         }
     }
 }

@@ -72,23 +72,23 @@ block Control {
         const SIZE_BITS = 8;
 
         /// Low-pass filter depth (higher = lower noise, higher power)
-        osr2: uint as enum Osr2 {
-            Depth1 = 0,
-            Depth2 = 1,
-            Depth4 = 2,
-            Depth8 = 3,
-            Depth16 = 4,
-            /// Reserved values (5~7), hardware equivalent to Depth16
+        lpf: uint as enum LpfDepth {
+            D1 = 0,
+            D2 = 1,
+            D4 = 2,
+            D8 = 3,
+            D16 = 4,
+            /// Reserved values (5~7), hardware equivalent to D16
             _CatchAll = catch_all,
         } = 5..8,
         /// Oversampling ratio
-        osr1: uint as enum Osr1 {
-            /// Ratio 8 (lowest noise, highest power)
-            Ratio8 = 0,
-            Ratio4 = 1,
-            Ratio2 = 2,
-            /// Ratio 1 (highest noise, lowest power)
-            Ratio1 = 3,
+        osr: uint as enum Oversampling {
+            /// 8× (lowest noise, highest power)
+            X8 = 0,
+            X4 = 1,
+            X2 = 2,
+            /// 1× (highest noise, lowest power)
+            X1 = 3,
         } = 3..5,
         /// Operating mode (pass through Suspend when switching)
         mode: uint as enum Mode {
@@ -111,7 +111,7 @@ block Control {
         /// Soft reset (set to 1 to trigger, must manually write 0 to clear)
         soft_rst: bool = 7,
         /// Output data rate
-        odr: uint as enum Odr {
+        rate: uint as enum DataRate {
             Hz1 = 0,
             Hz10 = 1,
             Hz50 = 2,
@@ -131,15 +131,15 @@ block Control {
             /// Reserved (3), equivalent to ±32 Gauss
             _CatchAll = catch_all,
         } = 2..4,
-        /// Set/reset mode — controls whether offset is updated during measurement
-        set_reset_mode: uint as enum SetResetMode {
+        /// Offset correction mode — controls whether set/reset is updated during measurement
+        offset: uint as enum OffsetCorrection {
             /// Set and reset both on (offset updated each measurement)
-            SetAndResetOn = 0,
+            BothOn = 0,
             /// Set only on
-            SetOnlyOn = 1,
+            SetOnly = 1,
             /// Reserved
             _CatchAll = catch_all,
-            /// Set and reset both off (no offset update)
+            /// Both off (no offset update)
             Off = 3,
         } = 0..2,
     },

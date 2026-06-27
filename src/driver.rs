@@ -26,7 +26,7 @@
 use core::marker::PhantomData;
 
 use crate::reg::Qmc6309Reg;
-use crate::reg::{Mode, Odr, Osr1, Osr2, Range, SetResetMode};
+use crate::reg::{DataRate, LpfDepth, Mode, OffsetCorrection, Oversampling, Range};
 use device_driver::RegisterInterface;
 
 // ==================== Mode Generics ====================
@@ -92,42 +92,42 @@ impl<BUS> From<BUS> for Error<BUS> {
 #[derive(Debug, Clone, Copy)]
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct Config {
-    pub osr2: Osr2,
-    pub osr1: Osr1,
-    pub odr: Odr,
+    pub lpf: LpfDepth,
+    pub osr: Oversampling,
+    pub rate: DataRate,
     pub range: Range,
-    pub set_reset_mode: SetResetMode,
+    pub offset: OffsetCorrection,
 }
 
 impl Default for Config {
     fn default() -> Self {
         Self {
-            osr2: Osr2::Depth16,
-            osr1: Osr1::Ratio8,
-            odr: Odr::Hz200,
+            lpf: LpfDepth::D16,
+            osr: Oversampling::X8,
+            rate: DataRate::Hz200,
             range: Range::G8,
-            set_reset_mode: SetResetMode::SetAndResetOn,
+            offset: OffsetCorrection::BothOn,
         }
     }
 }
 
-/// One-shot config (Single mode only, no ODR needed)
+/// One-shot config (Single mode only, no DataRate needed)
 #[derive(Debug, Clone, Copy)]
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct ShotConfig {
-    pub osr2: Osr2,
-    pub osr1: Osr1,
+    pub lpf: LpfDepth,
+    pub osr: Oversampling,
     pub range: Range,
-    pub set_reset_mode: SetResetMode,
+    pub offset: OffsetCorrection,
 }
 
 impl Default for ShotConfig {
     fn default() -> Self {
         Self {
-            osr2: Osr2::Depth16,
-            osr1: Osr1::Ratio8,
+            lpf: LpfDepth::D16,
+            osr: Oversampling::X8,
             range: Range::G8,
-            set_reset_mode: SetResetMode::SetAndResetOn,
+            offset: OffsetCorrection::BothOn,
         }
     }
 }
@@ -170,7 +170,7 @@ const fn range_to_gauss(r: Range) -> f32 {
 /// Standard continuous measurement driver (chip Normal mode)
 ///
 /// 构造时自动：软复位 → 验证芯片 ID → 写入Configuration。
-/// Continuously updates at ODR rate. `read_gauss()` reads the latest value at any time.
+/// Continuously updates at the configured data rate. `read_gauss()` reads the latest value at any time.
 pub struct Qmc6309<I, M: SensorMode = DefaultMode> {
     device: Qmc6309Reg<I>,
     range: Range,
@@ -634,13 +634,13 @@ fn write_config<I: RegisterInterface<AddressType = u8>>(
 ) -> Result<(), Error<I::Error>> {
     device.control().reg_1().modify(|r| {
         r.set_mode(mode);
-        r.set_osr_2(cfg.osr2);
-        r.set_osr_1(cfg.osr1);
+        r.set_lpf(cfg.lpf);
+        r.set_osr(cfg.osr);
     })?;
     device.control().reg_2().modify(|r| {
-        r.set_odr(cfg.odr);
+        r.set_rate(cfg.rate);
         r.set_rng(cfg.range);
-        r.set_set_reset_mode(cfg.set_reset_mode);
+        r.set_offset(cfg.offset);
     })?;
     Ok(())
 }
@@ -656,17 +656,17 @@ async fn write_config_async<I: device_driver::AsyncRegisterInterface<AddressType
         .reg_1()
         .modify_async(|r| {
             r.set_mode(mode);
-            r.set_osr_2(cfg.osr2);
-            r.set_osr_1(cfg.osr1);
+            r.set_lpf(cfg.lpf);
+            r.set_osr(cfg.osr);
         })
         .await?;
     device
         .control()
         .reg_2()
         .modify_async(|r| {
-            r.set_odr(cfg.odr);
+            r.set_rate(cfg.rate);
             r.set_rng(cfg.range);
-            r.set_set_reset_mode(cfg.set_reset_mode);
+            r.set_offset(cfg.offset);
         })
         .await?;
     Ok(())
@@ -678,12 +678,12 @@ fn write_shot_config<I: RegisterInterface<AddressType = u8>>(
 ) -> Result<(), Error<I::Error>> {
     device.control().reg_1().modify(|r| {
         r.set_mode(Mode::Single);
-        r.set_osr_2(cfg.osr2);
-        r.set_osr_1(cfg.osr1);
+        r.set_lpf(cfg.lpf);
+        r.set_osr(cfg.osr);
     })?;
     device.control().reg_2().modify(|r| {
         r.set_rng(cfg.range);
-        r.set_set_reset_mode(cfg.set_reset_mode);
+        r.set_offset(cfg.offset);
     })?;
     Ok(())
 }
@@ -698,8 +698,8 @@ async fn write_shot_config_async<I: device_driver::AsyncRegisterInterface<Addres
         .reg_1()
         .modify_async(|r| {
             r.set_mode(Mode::Single);
-            r.set_osr_2(cfg.osr2);
-            r.set_osr_1(cfg.osr1);
+            r.set_lpf(cfg.lpf);
+            r.set_osr(cfg.osr);
         })
         .await?;
     device
@@ -707,7 +707,7 @@ async fn write_shot_config_async<I: device_driver::AsyncRegisterInterface<Addres
         .reg_2()
         .modify_async(|r| {
             r.set_rng(cfg.range);
-            r.set_set_reset_mode(cfg.set_reset_mode);
+            r.set_offset(cfg.offset);
         })
         .await?;
     Ok(())
@@ -731,8 +731,8 @@ mod tests {
     #[test]
     fn test_config_defaults() {
         let c = Config::default();
-        assert!(matches!(c.osr2, Osr2::Depth16));
-        assert!(matches!(c.odr, Odr::Hz200));
+        assert!(matches!(c.lpf, LpfDepth::D16));
+        assert!(matches!(c.rate, DataRate::Hz200));
         assert!(matches!(c.range, Range::G8));
 
         let sc = ShotConfig::default();
