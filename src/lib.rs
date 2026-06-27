@@ -13,7 +13,7 @@
 //! ## Quick Start
 //!
 //! ```ignore
-//! use qmc6309_driver::{Config, Qmc6309, Qmc6309I2cInterface};
+//! use qmc6309::{Config, Qmc6309, Qmc6309I2cInterface};
 //!
 //! let i2c = hal::I2c::new(...);
 //! let interface = Qmc6309I2cInterface::new(i2c);
@@ -28,7 +28,16 @@ extern crate std;
 mod driver;
 mod interface;
 
-#[allow(unused)]
+#[allow(
+    unused,
+    clippy::redundant_field_names,
+    clippy::identity_op,
+    clippy::erasing_op,
+    clippy::unnecessary_cast,
+    clippy::new_without_default,
+    clippy::let_and_return,
+    clippy::unnecessary_fallible_conversions
+)]
 pub mod reg {
     include!("register.rs");
 }

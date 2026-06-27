@@ -1,7 +1,7 @@
 //! QMC6309 集成测试 — 初始化流程和数据读取
 
 use embedded_hal_mock::eh1::i2c::{Mock as MockI2c, Transaction};
-use qmc6309_driver::{Config, Error, Qmc6309, Qmc6309I2cInterface};
+use qmc6309::{Blocking, Config, Error, Qmc6309, Qmc6309I2cInterface};
 
 const ADDR: u8 = 0x1A;
 
@@ -29,7 +29,7 @@ fn test_new_and_chip_id() {
 
     let mock = MockI2c::new(&transactions);
     let interface = Qmc6309I2cInterface::new(mock);
-    let result = Qmc6309::new(interface, Config::default());
+    let result = Qmc6309::<_, Blocking>::new(interface, Config::default());
     let mut sensor = match result {
         Ok(s) => s,
         Err(_) => panic!("new() failed"),
@@ -48,7 +48,7 @@ fn test_bad_chip_id_is_error_and_returns_interface() {
     ];
     let mock = MockI2c::new(&transactions);
     let interface = Qmc6309I2cInterface::new(mock);
-    let result = Qmc6309::new(interface, Config::default());
+    let result = Qmc6309::<_, Blocking>::new(interface, Config::default());
 
     match result {
         Err((Error::InvalidChipId(id), mut iface)) => {
@@ -71,7 +71,7 @@ fn test_read_gauss() {
 
     let mock = MockI2c::new(&transactions);
     let interface = Qmc6309I2cInterface::new(mock);
-    let result = Qmc6309::new(interface, Config::default());
+    let result = Qmc6309::<_, Blocking>::new(interface, Config::default());
     let mut sensor = match result {
         Ok(s) => s,
         Err(_) => panic!("new() failed"),
