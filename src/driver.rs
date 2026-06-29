@@ -91,6 +91,7 @@ impl<BUS> From<BUS> for Error<BUS> {
 /// `Config::default()` for recommended values: 200 Hz, ±8 G, max oversampling, set/reset both on.
 #[derive(Debug, Clone, Copy)]
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
+#[derive(derive_setters::Setters)]
 pub struct Config {
     pub lpf: LpfDepth,
     pub osr: Oversampling,
@@ -114,6 +115,7 @@ impl Default for Config {
 /// One-shot config (Single mode only, no DataRate needed)
 #[derive(Debug, Clone, Copy)]
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
+#[derive(derive_setters::Setters)]
 pub struct ShotConfig {
     pub lpf: LpfDepth,
     pub osr: Oversampling,
@@ -220,6 +222,13 @@ where
         Ok(())
     }
 
+    /// Modify and apply configuration in one call via chainable setters
+    pub fn modify_config<F: FnOnce(&mut Config)>(&mut self, f: F) -> Result<(), Error<I::Error>> {
+        let mut config = self.config;
+        f(&mut config);
+        self.set_config(config)
+    }
+
     /// Release the sensor, returning the underlying interface
     pub fn release(self) -> I {
         self.device.interface
@@ -294,6 +303,16 @@ where
         Ok(())
     }
 
+    /// Modify and apply configuration in one call via chainable setters
+    pub async fn modify_config<F: FnOnce(&mut Config)>(
+        &mut self,
+        f: F,
+    ) -> Result<(), Error<<I as device_driver::AsyncRegisterInterface>::Error>> {
+        let mut config = self.config;
+        f(&mut config);
+        self.set_config(config).await
+    }
+
     pub fn release(self) -> I {
         self.device.interface
     }
@@ -364,6 +383,16 @@ where
         write_shot_config(&mut self.device, &config, Mode::Suspend)?;
         self.config = config;
         Ok(())
+    }
+
+    /// Modify and apply configuration in one call via chainable setters
+    pub fn modify_config<F: FnOnce(&mut ShotConfig)>(
+        &mut self,
+        f: F,
+    ) -> Result<(), Error<I::Error>> {
+        let mut config = self.config;
+        f(&mut config);
+        self.set_config(config)
     }
 
     pub fn release(self) -> I {
@@ -444,6 +473,16 @@ where
         Ok(())
     }
 
+    /// Modify and apply configuration in one call via chainable setters
+    pub async fn modify_config<F: FnOnce(&mut ShotConfig)>(
+        &mut self,
+        f: F,
+    ) -> Result<(), Error<<I as device_driver::AsyncRegisterInterface>::Error>> {
+        let mut config = self.config;
+        f(&mut config);
+        self.set_config(config).await
+    }
+
     pub fn release(self) -> I {
         self.device.interface
     }
@@ -519,6 +558,13 @@ where
         write_config(&mut self.device, &config, Mode::Continuous)?;
         self.config = config;
         Ok(())
+    }
+
+    /// Modify and apply configuration in one call via chainable setters
+    pub fn modify_config<F: FnOnce(&mut Config)>(&mut self, f: F) -> Result<(), Error<I::Error>> {
+        let mut config = self.config;
+        f(&mut config);
+        self.set_config(config)
     }
 
     pub fn release(self) -> I {
@@ -597,6 +643,16 @@ where
         write_config_async(&mut self.device, &config, Mode::Continuous).await?;
         self.config = config;
         Ok(())
+    }
+
+    /// Modify and apply configuration in one call via chainable setters
+    pub async fn modify_config<F: FnOnce(&mut Config)>(
+        &mut self,
+        f: F,
+    ) -> Result<(), Error<<I as device_driver::AsyncRegisterInterface>::Error>> {
+        let mut config = self.config;
+        f(&mut config);
+        self.set_config(config).await
     }
 
     pub fn release(self) -> I {

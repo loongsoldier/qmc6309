@@ -1,6 +1,6 @@
 [package]
 name = "qmc6309"
-version = "0.3.1"
+version = "0.3.2"
 edition = "2024"
 description = "A platform-agnostic, no-std Rust driver for the QMC6309 3-axis magnetic sensor"
 license = "MIT OR Apache-2.0"
@@ -13,6 +13,7 @@ categories = ["embedded", "hardware-support", "no-std"]
 # 预生成代码，只需运行时，不需要 proc-macro
 device-driver = { version = "1.0", default-features = false }
 embedded-hal = "1.0"
+derive_setters = "0.1"
 
 # 可选依赖
 embedded-hal-async = { version = "1.0", optional = true }
